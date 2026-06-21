@@ -2,7 +2,7 @@
 set -e
 
 echo "=================================================================="
-echo " Initiating Auto-Deployment: Testing Hospital v16 Architecture "
+echo " Initiating Auto-Deployment: Testing Hospital v16 Architecture    "
 echo "=================================================================="
 
 # 1. Update Ubuntu server components 
@@ -64,17 +64,33 @@ sudo docker exec -it marley_backend bench new-site testinghospital.local \
   --admin-password admin_hospital_password \
   --install-app erpnext --force
 
-# FAILSALFE ALTERNATIVE: Natively clone using terminal git directly into the application node volume
-echo "-> Pulling Earthians Marley Health via absolute volume injection paths..."
-sudo docker exec -it marley_backend git clone https://github.com /home/frappe/frappe-bench/apps/healthcare
+# DEFINITIVE SOLUTION: Clone cleanly to host machine using a raw path first
+echo "-> Pulling Marley Health application code securely to host workspace..."
+sudo rm -rf /tmp/healthcare
+git clone https://github.com /tmp/healthcare
 
-# Link the app inside the framework metadata registries and compile
-sudo docker exec -it marley_backend bench setup requirements
-sudo docker exec -it marley_backend bench --site testinghospital.local install-app healthcare
+# Map code directly using host paths to avoid nested escaping bugs inside the container terminal
+echo "-> Injecting Marley Health codebase directly into internal bench structures..."
+sudo docker exec -i marley_backend mkdir -p /home/frappe/frappe-bench/apps/healthcare
+sudo docker cp /tmp/healthcare/. marley_backend:/home/frappe/frappe-bench/apps/healthcare/
+sudo docker exec -i marley_backend chown -R frappe:frappe /home/frappe/frappe-bench/apps/healthcare
+
+# Register the module natively into the site registry file array 
+echo "-> Mapping local configuration parameters to match expected namespace variables..."
+sudo docker exec -i marley_backend bash -c "cat << 'EOF' > /home/frappe/frappe-bench/sites/apps.txt
+frappe
+erpnext
+healthcare
+EOF"
+
+# Compile and bind assets inside the framework metadata registries
+echo "-> Compiling application dependencies and building web assets..."
+sudo docker exec -i marley_backend bench setup requirements
+sudo docker exec -i marley_backend bench --site testinghospital.local install-app healthcare
 
 # 8. Injecting SEO Landing Hub and Booking Systems into Frappe Site router
 echo "-> Building Hospital Web Front-End Page..."
-sudo docker exec -it marley_backend python3 -c "
+sudo docker exec -i marley_backend python3 -c "
 import frappe
 frappe.init(site='testinghospital.local')
 frappe.connect()
