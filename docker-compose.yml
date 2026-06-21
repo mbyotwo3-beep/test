@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  # --- CENTRAL MEDICAL DATABASE ENGINE ---
+  # --- 1. STABLE CENTRAL MEDICAL DATABASE ENGINE ---
   db:
-    image: mariadb:10.11
+    image: mariadb:10.6
     container_name: testing_hospital_db
     command:
       - --character-set-server=utf8mb4
@@ -16,31 +16,65 @@ services:
     restart: always
 
   redis-cache:
-    image: redis:7.2-alpine
+    image: redis:6.2-alpine
     container_name: hospital_redis_cache
     restart: always
 
   redis-queue:
-    image: redis:7.2-alpine
+    image: redis:6.2-alpine
     container_name: hospital_redis_queue
     restart: always
 
-  # --- BACKEND SERVER: FRAPPE CORE RUNNING VERSION 16 ---
+  # --- 2. THE LOGIC ENGINE (Python / Frappe Backend) ---
   backend:
-    image: frappe/erpnext:v16
-    container_name: marley_backend
-    ports:
-      - "80:8000"    # Access your clean Marley Health Staff EMR Panel
+    image: doc0clock-hms:v15
+    container_name: hms_backend
     environment:
       - DB_HOST=db
       - DB_PORT=3306
       - REDIS_CACHE=redis-cache:6379
       - REDIS_QUEUE=redis-queue:6379
     volumes:
-      - assets-data:/home/frappe/frappe-bench/sites
+      - sites-data:/home/frappe/frappe-bench/sites
+    depends_on:
+      - db
     restart: always
 
-  # --- UNIVERSAL DATA PIPELINE ROUTER (MIRTH CONNECT) ---
+  # --- 3. THE FRONTEND UI ENGINE (Nginx) ---
+  frontend:
+    image: doc0clock-hms:v15
+    container_name: hms_frontend
+    command:
+      - nginx-entrypoint.sh
+    environment:
+      - BACKEND=backend:8000
+      - FRAPPE_SITE_NAME_HEADER=testinghospital.local
+      - SOCKETIO=websocket:9000
+      - UPSTREAM_REAL_IP_ADDRESS=127.0.0.1
+      - UPSTREAM_REAL_IP_HEADER=X-Forwarded-For
+      - UPSTREAM_REAL_IP_RECURSIVE=off
+    ports:
+      - "80:8080" # Clean Staff Dashboard Access
+    volumes:
+      - sites-data:/home/frappe/frappe-bench/sites
+    depends_on:
+      - backend
+    restart: always
+
+  # --- 4. REAL-TIME EVENT ENGINE (Websockets) ---
+  websocket:
+    image: doc0clock-hms:v15
+    container_name: hms_websocket
+    command:
+      - node
+      - /home/frappe/frappe-bench/apps/frappe/socketio.js
+    environment:
+      - REDIS_QUEUE=redis-queue:6379
+    volumes:
+      - sites-data:/home/frappe/frappe-bench/sites
+    restart: always
+
+  # --- 5. UNIVERSAL DATA PIPELINE ROUTER (MIRTH CONNECT) ---
   mirth:
     image: nextgenhealthcare/connect:latest
     container_name: mirth_connect
@@ -62,5 +96,5 @@ services:
 
 volumes:
   db-data:
-  assets-data:
+  sites-data:
   mirth-data:
