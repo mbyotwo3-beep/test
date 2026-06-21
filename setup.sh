@@ -2,37 +2,51 @@
 set -e
 
 echo "=================================================================="
-echo " Deploying Testing Hospital SEO Hub & Universal Machine Gateway "
+echo " Initiating Auto-Deployment: Testing Hospital v16 Architecture "
 echo "=================================================================="
 
-# 1. Update and provision Ubuntu packages
+# 1. Update Ubuntu server components 
 sudo apt-get update -y
 sudo apt-get upgrade -y
 
-# 2. Automatically install Docker infrastructure
-echo "-> Mounting Docker engine layers..."
-curl -fsSL https://get.docker.com -o get-docker.sh
+# 2. AUTOMATICALLY OPEN PORTS IN UBUNTU FIREWALL
+echo "-> Unlocking Network Firewall Ports for Web and Machines..."
+sudo apt-get install ufw -y
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow 22/tcp    # Keep your SSH terminal open
+sudo ufw allow 80/tcp    # Open Patient Website Landing Page
+sudo ufw allow 8443/tcp  # Open Mirth Admin Dashboard
+sudo ufw allow 9000/tcp  # Open Lab Analyzer Port (HL7)
+sudo ufw allow 9100/tcp  # Open Big Machine Port (DICOM)
+sudo ufw allow 9200/tcp  # Open IoT / CSV Port
+echo "y" | sudo ufw enable
+sudo ufw status verbose
+
+# 3. Automated deployment of Docker engine 
+echo "-> Deploying container structures..."
+curl -fsSL https://docker.com -o get-docker.sh
 sudo sh get-docker.sh
 sudo systemctl enable docker --now
 
-# 3. Boot container systems
-echo "-> Starting live containers..."
+# 4. Boot database clusters and framework platforms
+echo "-> Powering up core systems..."
 sudo docker compose up -d
-sleep 20 # Allow database systems to provision completely
+sleep 20 # Hold to allow full MariaDB table initialization
 
-# 4. Create Frappe 16 / Marley Health Application Node
-echo "-> Compiling Frappe v16 Environment & Marley Health modules..."
+# 5. Set up the fresh Frappe v16 platform core
+echo "-> Configuring Frappe v16 with Marley Health schemas..."
 sudo docker exec -it marley_backend bench new-site testinghospital.local \
   --db-root-password hospital_secure_password_2026 \
   --admin-password admin_hospital_password \
   --install-app erpnext --force
 
-# Fetch Marley Health module framework matching v16 schemas
+# Integrate the Marley Health module systems onto version 16 structures
 sudo docker exec -it marley_backend bench get-app marley --branch v16
 sudo docker exec -it marley_backend bench --site testinghospital.local install-app marley
 
-# 5. Injecting SEO Landing Page directly into Frappe 16 routing core
-echo "-> Provisioning Testing Hospital Front-End Landing Page..."
+# 6. Injecting SEO Landing Hub and Booking Systems into Frappe Site router
+echo "-> Building Hospital Web Front-End Page..."
 sudo docker exec -it marley_backend python3 -c "
 import frappe
 frappe.init(site='testinghospital.local')
@@ -41,44 +55,44 @@ frappe.connect()
 if not frappe.db.exists('Web Page', 'index'):
     doc = frappe.get_doc({
         'doctype': 'Web Page',
-        'title': 'Testing Hospital - Live Diagnostics & Clinical Care',
+        'title': 'Testing Hospital - Advanced Clinical Booking & Diagnosis',
         'route': 'index',
         'published': 1,
-        'meta_title': 'Testing Hospital | State of the Art Care & Real-time Diagnostics',
-        'meta_description': 'Book clinical appointments online at Testing Hospital. Integrated with live automated laboratory and imaging pipelines.',
+        'meta_title': 'Testing Hospital | Secure Web Bookings & Live Medical Results',
+        'meta_description': 'Schedule an appointment at Testing Hospital. Modern clinical diagnostics natively linked with medical device results data engines.',
         'main_section': '''
-        <div style=\"font-family:sans-serif; text-align:center; padding: 80px 20px; background:linear-gradient(to right, #0F2027, #203A43, #2C5364); color:white;\">
-            <h1 style=\"font-size:3rem; margin-bottom:10px;\">Testing Hospital</h1>
-            <p style=\"font-size:1.2rem; margin-bottom:30px;\">Frappe 16 Connected Engine — Seamless Multi-Machine Diagnostic Mapping.</p>
-            <a href=\"#booking-form\" style=\"background:#00F260; color:#0575E6; padding:15px 30px; text-decoration:none; font-weight:bold; border-radius:5px;\">Schedule Appointment Now</a>
+        <div style=\"font-family:sans-serif; text-align:center; padding: 90px 20px; background:linear-gradient(to right, #1a2a6c, #b21f1f, #fdbb2d); color:white;\">
+            <h1 style=\"font-size:3.5rem; margin-bottom:10px;\">Testing Hospital</h1>
+            <p style=\"font-size:1.3rem; margin-bottom:35px;\">Frappe v16 High-Performance Framework with Live Universal Machine Interfacing.</p>
+            <a href=\"#booking-form\" style=\"background:#fff; color:#b21f1f; padding:15px 35px; text-decoration:none; font-weight:bold; border-radius:5px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);\">Schedule An Appointment</a>
         </div>
-        <div id=\"booking-form\" style=\"max-width:600px; margin: 50px auto; padding: 30px; border:1px solid #ddd; border-radius:8px; font-family:sans-serif;\">
-            <h2 style=\"text-align:center; color:#2C5364;\">Book Consultation</h2>
+        <div id=\"booking-form\" style=\"max-width:600px; margin: 60px auto; padding: 35px; border:1px solid #ddd; border-radius:10px; font-family:sans-serif; background:#fafafa;\">
+            <h2 style=\"text-align:center; color:#1a2a6c; margin-bottom:25px;\">Secure Patient Intake Registry</h2>
             <form action=\"/api/method/marley.healthcare.doctype.patient_appointment.patient_appointment.make_appointment\" method=\"POST\">
-                <label style=\"display:block; margin:15px 0 5px;\">Patient Full Name</label>
-                <input type=\"text\" name=\"patient_name\" required style=\"width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;\">
-                <label style=\"display:block; margin:15px 0 5px;\">Appointment Date</label>
-                <input type=\"date\" name=\"appointment_date\" required style=\"width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;\">
-                <label style=\"display:block; margin:15px 0 5px;\">Clinical Department</label>
-                <select name=\"department\" style=\"width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;\">
-                    <option>General Medicine Clinic</option>
-                    <option>Diagnostic Laboratory</option>
-                    <option>High-Field Imaging Center (MRI/CT)</option>
+                <label style=\"display:block; margin:15px 0 5px; font-weight:bold;\">Patient Legal Name</label>
+                <input type=\"text\" name=\"patient_name\" required style=\"width:100%; padding:12px; border:1px solid #ccc; border-radius:4px;\">
+                <label style=\"display:block; margin:15px 0 5px; font-weight:bold;\">Appointment Target Date</label>
+                <input type=\"date\" name=\"appointment_date\" required style=\"width:100%; padding:12px; border:1px solid #ccc; border-radius:4px;\">
+                <label style=\"display:block; margin:15px 0 5px; font-weight:bold;\">Clinical Target Division</label>
+                <select name=\"department\" style=\"width:100%; padding:12px; border:1px solid #ccc; border-radius:4px; background:white;\">
+                    <option>General Family Medicine</option>
+                    <option>Core Diagnostic Laboratory (HL7 automated)</option>
+                    <option>High-Field Imaging Facility (MRI/CT Scans)</option>
                 </select>
-                <button type=\"submit\" style=\"width:100%; background:#2C5364; color:white; border:none; padding:12px; margin-top:20px; border-radius:4px; font-weight:bold; cursor:pointer;\">Confirm Booking</button>
+                <button type=\"submit\" style=\"width:100%; background:#1a2a6c; color:white; border:none; padding:15px; margin-top:25px; border-radius:4px; font-weight:bold; font-size:1.1rem; cursor:pointer;\">Finalize Appointment</button>
             </form>
         </div>
         '''
     })
     doc.insert()
     frappe.db.commit()
-print('Frappe 16 Hospital Landing Hub successfully written.')
+print('SEO Front-end layer loaded into Frappe 16 successfully.')
 "
 
 echo "=================================================================="
-echo " SERVERS COMPLETE: Everything is synced and running smoothly!    "
+echo " SYSTEM READY: All Ports Opened and Servers Running Smoothly!   "
 echo "=================================================================="
-echo " Testing Hospital Home (Booking/SEO):  http://YOUR_LINODE_IP"
-echo " Clinical EMR Desk Login (Marley 16):  http://YOUR_LINODE_IP/app"
-echo " Central Machine Routing Core (Mirth): https://YOUR_LINODE_IP:8443"
+echo " Hospital Website Home (SEO Landing & Booking): http://YOUR_LINODE_IP"
+echo " Marley Health 16 Staff Dashboard Access:       http://YOUR_LINODE_IP/app"
+echo " Mirth Connect Automation Hub Interface:        https://YOUR_LINODE_IP:8443"
 echo "=================================================================="
