@@ -22,7 +22,7 @@ sudo ufw allow 9100/tcp  # Open Big Machine Port (DICOM)
 sudo ufw allow 9200/tcp  # Open IoT / CSV Port
 echo "y" | sudo ufw enable
 
-# 3. ROBUST DIRECT DOCKER INSTALLATION (Bypasses broken script downloads)
+# 3. DIRECT REPOSITORY DOCKER INSTALLATION
 echo "-> Deploying container structures via standard repository..."
 sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
 curl -fsSL https://docker.com | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
@@ -31,25 +31,28 @@ sudo apt-get update -y
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 sudo systemctl enable docker --now
 
-# 4. Boot database clusters and framework platforms
-echo "-> Powering up core systems..."
-sudo docker compose up -d
-sleep 20 # Hold to allow full MariaDB table initialization
+# Refresh PATH and environment links instantly
+export PATH=$PATH:/usr/bin:/usr/local/bin
 
-# 5. Set up the fresh Frappe v16 platform core
+# 4. Boot database clusters using direct system binary path
+echo "-> Powering up core systems via absolute system paths..."
+/usr/bin/docker compose up -d
+sleep 25 # Hold to allow full MariaDB table initialization
+
+# 5. Set up the fresh Frappe v16 platform core via absolute binary
 echo "-> Configuring Frappe v16 with Marley Health schemas..."
-sudo docker exec -it marley_backend bench new-site testinghospital.local \
+/usr/bin/docker exec -it marley_backend bench new-site testinghospital.local \
   --db-root-password hospital_secure_password_2026 \
   --admin-password admin_hospital_password \
   --install-app erpnext --force
 
 # Integrate the Marley Health module systems onto version 16 structures
-sudo docker exec -it marley_backend bench get-app marley --branch v16
-sudo docker exec -it marley_backend bench --site testinghospital.local install-app marley
+/usr/bin/docker exec -it marley_backend bench get-app marley --branch v16
+/usr/bin/docker exec -it marley_backend bench --site testinghospital.local install-app marley
 
 # 6. Injecting SEO Landing Hub and Booking Systems into Frappe Site router
 echo "-> Building Hospital Web Front-End Page..."
-sudo docker exec -it marley_backend python3 -c "
+/usr/bin/docker exec -it marley_backend python3 -c "
 import frappe
 frappe.init(site='testinghospital.local')
 frappe.connect()
@@ -92,7 +95,7 @@ print('SEO Front-end layer loaded into Frappe 16 successfully.')
 "
 
 echo "=================================================================="
-echo " SYSTEM READY: All Ports Opened and New Script Installed!       "
+echo " SYSTEM READY: All Ports Opened and Paths Resolved Smoothly!     "
 echo "=================================================================="
 echo " Hospital Website Home (SEO Landing & Booking): http://YOUR_LINODE_IP"
 echo " Marley Health 16 Staff Dashboard Access:       http://YOUR_LINODE_IP/app"
