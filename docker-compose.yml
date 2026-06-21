@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  # --- CENTRAL DATABASE (MARIADB 11.8 FOR FRAPPE 16) ---
+  db:
+    image: mariadb:11.8
+    container_name: testing_hospital_db
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+    environment:
+      MYSQL_ROOT_PASSWORD: hospital_secure_password_2026
+    volumes:
+      - db-data:/var/lib/mysql
+    restart: always
+
+  redis-cache:
+    image: redis:7.2-alpine
+    container_name: hospital_redis_cache
+    restart: always
+
+  redis-queue:
+    image: redis:7.2-alpine
+    container_name: hospital_redis_queue
+    restart: always
+
+  # --- LATEST FRAPPE v16 CORE ---
+  backend:
+    image: frappe/erpnext:v16
+    container_name: marley_backend
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - REDIS_CACHE=redis-cache:6379
+      - REDIS_QUEUE=redis-queue:6379
+    volumes:
+      - assets-data:/home/frappe/frappe-bench/sites
+    restart: always
+
+  # --- UNIVERSAL MACHINE INTEGRATION GATEWAY (MIRTH CONNECT) ---
+  mirth:
+    image: nextgenhealthcare/connect:latest
+    container_name: mirth_connect
+    ports:
+      - "8443:8443"  # Mirth Secure Login Web UI
+      - "9000:9000"  # DIAGNOSTIC: Labs, Vitals, Hematology (HL7)
+      - "9100:9100"  # BIG HOSPITAL: MRI, CT Scans, X-Rays (DICOM)
+      - "9200:9200"  # ICU / OUTPATIENT: ICU Monitors, IoT Feeds, CSV, JSON
+    environment:
+      - DATABASE=mariadb
+      - DATABASE_URL=jdbc:mariadb://db:3306/mirth_db
+      - DATABASE_USERNAME=root
+      - DATABASE_PASSWORD=hospital_secure_password_2026
+    volumes:
+      - mirth-data:/opt/mirth-connect/appdata
+    depends_on:
+      - db
+    restart: always
+
+volumes:
+  db-data:
+  assets-data:
+  mirth-data:
