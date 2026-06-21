@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # --- MARIA DB DATABASE ENGINE (OPTIMIZED FOR FRAPPE 16) ---
+  # --- CENTRAL MEDICAL DATABASE ENGINE ---
   db:
     image: mariadb:10.11
     container_name: testing_hospital_db
