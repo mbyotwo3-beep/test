@@ -45,7 +45,7 @@ services:
     image: nextgenhealthcare/connect:latest
     container_name: mirth_connect
     ports:
-      - "8443:8443"  # Secure Mirth Web Interface Access test
+      - "8443:8443"  # Secure Mirth Web Interface Access
       - "9000:9000"  # ENTRY 1: Lab Diagnostics / Hematology Analyzers (HL7)
       - "9100:9100"  # ENTRY 2: Large Equipment Systems - MRI & CT Scans (DICOM)
       - "9200:9200"  # ENTRY 3: General Clinical Monitors & Direct IoT (CSV/JSON/Web)
