@@ -42,7 +42,7 @@ until sudo docker exec testing_hospital_db mariadb-admin ping -u root -phospital
 done
 echo "-> Database is fully alive and ready!"
 
-# 6. INJECT SECURE ROOT CONFIG (Bypasses terminal password prompts completely)
+# 6. INJECT SECURE ROOT CONFIG
 echo "-> Injecting superuser access configuration blocks..."
 sudo docker exec -i marley_backend bash -c "cat << 'EOF' > /home/frappe/frappe-bench/sites/common_site_config.json
 {
@@ -68,56 +68,51 @@ sudo docker exec -it marley_backend bench new-site testinghospital.local \
 echo "-> Pulling Marley Health application package natively into v16 bench..."
 sudo docker exec -it marley_backend bench get-app healthcare
 
-# DEFINITIVE FIXED STEP: Mounts the schema structures but skips the broken frontend compilation script loop
-echo "-> Linking healthcare modules to testinghospital.local (Bypassing heavy asset engine compilation)..."
+# FIXED: Installs schemas but skips front-end asset compilation to avoid the crash
+echo "-> Linking healthcare modules to site cleanly..."
 sudo docker exec -it marley_backend bench --site testinghospital.local install-app healthcare --skip-assets
 
-# 8. Injecting SEO Landing Hub and Booking Systems into Frappe Site router
+# 8. SAFE INJECTION: Create Python file inside container to prevent terminal quotation errors
 echo "-> Building Hospital Web Front-End Page..."
-sudo docker exec -it marley_backend python3 -c "
+sudo docker exec -i marley_backend bash -c "cat << 'EOF' > /home/frappe/frappe-bench/make_page.py
 import frappe
 frappe.init(site='testinghospital.local')
 frappe.connect()
-
 if not frappe.db.exists('Web Page', 'index'):
     doc = frappe.get_doc({
         'doctype': 'Web Page',
         'title': 'Testing Hospital - Advanced Clinical Booking & Diagnosis',
         'route': 'index',
         'published': 1,
-        'meta_title': 'Testing Hospital | Secure Web Bookings & Live Medical Results',
-        'meta_description': 'Schedule an appointment at Testing Hospital. Modern clinical diagnostics natively linked with medical device results data engines.',
+        'meta_title': 'Testing Hospital | Secure Web Bookings',
+        'meta_description': 'Schedule an appointment at Testing Hospital.',
         'main_section': '''
-        <div style=\"font-family:sans-serif; text-align:center; padding: 90px 20px; background:linear-gradient(to right, #1a2a6c, #b21f1f, #fdbb2d); color:white;\">
-            <h1 style=\"font-size:3.5rem; margin-bottom:10px;\">Testing Hospital</h1>
-            <p style=\"font-size:1.3rem; margin-bottom:35px;\">Frappe v16 High-Performance Framework with Live Universal Machine Interfacing.</p>
-            <a href=\"#booking-form\" style=\"background:#fff; color:#b21f1f; padding:15px 35px; text-decoration:none; font-weight:bold; border-radius:5px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);\">Schedule An Appointment</a>
+        <div style="font-family:sans-serif; text-align:center; padding: 90px 20px; background:linear-gradient(to right, #1a2a6c, #b21f1f, #fdbb2d); color:white;">
+            <h1>Testing Hospital</h1>
+            <p>Frappe v16 High-Performance Framework with Live Machine Interfacing.</p>
         </div>
-        <div id=\"booking-form\" style=\"max-width:600px; margin: 60px auto; padding: 35px; border:1px solid #ddd; border-radius:10px; font-family:sans-serif; background:#fafafa;\">
-            <h2 style=\"text-align:center; color:#1a2a6c; margin-bottom:25px;\">Secure Patient Intake Registry</h2>
-            <form action=\"/api/method/healthcare.healthcare.doctype.patient_appointment.patient_appointment.make_appointment\" method=\"POST\">
-                <label style=\"display:block; margin:15px 0 5px; font-weight:bold;\">Patient Legal Name</label>
-                <input type=\"text\" name=\"patient_name\" required style=\"width:100%; padding:12px; border:1px solid #ccc; border-radius:4px;\">
-                <label style=\"display:block; margin:15px 0 5px; font-weight:bold;\">Appointment Target Date</label>
-                <input type=\"date\" name=\"appointment_date\" required style=\"width:100%; padding:12px; border:1px solid #ccc; border-radius:4px;\">
-                <label style=\"display:block; margin:15px 0 5px; font-weight:bold;\">Clinical Target Division</label>
-                <select name=\"department\" style=\"width:100%; padding:12px; border:1px solid #ccc; border-radius:4px; background:white;\">
-                    <option>General Family Medicine</option>
-                    <option>Core Diagnostic Laboratory (HL7 automated)</option>
-                    <option>High-Field Imaging Facility (MRI/CT Scans)</option>
-                </select>
-                <button type=\"submit\" style=\"width:100%; background:#1a2a6c; color:white; border:none; padding:15px; margin-top:25px; border-radius:4px; font-weight:bold; font-size:1.1rem; cursor:pointer;\">Finalize Appointment</button>
+        <div style="max-width:600px; margin: 60px auto; padding: 35px; border:1px solid #ddd; border-radius:10px; font-family:sans-serif; background:#fafafa;">
+            <h2>Patient Registration Intake</h2>
+            <form action="/api/method/healthcare.healthcare.doctype.patient_appointment.patient_appointment.make_appointment" method="POST">
+                <label style="display:block; margin:15px 0 5px; font-weight:bold;">Patient Full Name</label>
+                <input type="text" name="patient_name" required style="width:100%; padding:12px; border:1px solid #ccc; border-radius:4px;">
+                <label style="display:block; margin:15px 0 5px; font-weight:bold;">Appointment Target Date</label>
+                <input type="date" name="appointment_date" required style="width:100%; padding:12px; border:1px solid #ccc; border-radius:4px;">
+                <button type="submit" style="width:100%; background:#1a2a6c; color:white; border:none; padding:15px; margin-top:25px; border-radius:4px; font-weight:bold; cursor:pointer;">Finalize Appointment</button>
             </form>
         </div>
         '''
     })
     doc.insert()
     frappe.db.commit()
-print('SEO Front-end layer loaded into Frappe 16 successfully.')
-"
+print('SEO Front-end layer successfully injected!')
+EOF"
+
+# Execute the isolated page injection file
+sudo docker exec -it marley_backend python3 /home/frappe/frappe-bench/make_page.py
 
 echo "=================================================================="
-echo " SYSTEM READY: Earthians Marley Health Is Successfully Installed! "
+echo " SYSTEM READY: All Ports Opened and Script Executed Smoothly!    "
 echo "=================================================================="
 echo " Hospital Website Home (SEO Landing & Booking): http://YOUR_LINODE_IP"
 echo " Staff Dashboard Access (Marley Framework):     http://YOUR_LINODE_IP/app"
