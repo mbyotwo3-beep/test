@@ -64,33 +64,16 @@ sudo docker exec -it marley_backend bench new-site testinghospital.local \
   --admin-password admin_hospital_password \
   --install-app erpnext --force
 
-# DEFINITIVE SOLUTION: Clone cleanly to host machine using a raw path first
-echo "-> Pulling Marley Health application code securely to host workspace..."
-sudo rm -rf /tmp/healthcare
-git clone https://github.com /tmp/healthcare
+# DEFINITIVE SOLUTION: Runs the standard native package installation steps directly inside the container
+echo "-> Pulling Marley Health application package natively into v16 bench..."
+sudo docker exec -it marley_backend bench get-app healthcare
 
-# Map code directly using host paths to avoid nested escaping bugs inside the container terminal
-echo "-> Injecting Marley Health codebase directly into internal bench structures..."
-sudo docker exec -i marley_backend mkdir -p /home/frappe/frappe-bench/apps/healthcare
-sudo docker cp /tmp/healthcare/. marley_backend:/home/frappe/frappe-bench/apps/healthcare/
-sudo docker exec -i marley_backend chown -R frappe:frappe /home/frappe/frappe-bench/apps/healthcare
-
-# Register the module natively into the site registry file array 
-echo "-> Mapping local configuration parameters to match expected namespace variables..."
-sudo docker exec -i marley_backend bash -c "cat << 'EOF' > /home/frappe/frappe-bench/sites/apps.txt
-frappe
-erpnext
-healthcare
-EOF"
-
-# Compile and bind assets inside the framework metadata registries
-echo "-> Compiling application dependencies and building web assets..."
-sudo docker exec -i marley_backend bench setup requirements
-sudo docker exec -i marley_backend bench --site testinghospital.local install-app healthcare
+echo "-> Linking healthcare modules directly to the Testing Hospital instance..."
+sudo docker exec -it marley_backend bench --site testinghospital.local install-app healthcare
 
 # 8. Injecting SEO Landing Hub and Booking Systems into Frappe Site router
 echo "-> Building Hospital Web Front-End Page..."
-sudo docker exec -i marley_backend python3 -c "
+sudo docker exec -it marley_backend python3 -c "
 import frappe
 frappe.init(site='testinghospital.local')
 frappe.connect()
