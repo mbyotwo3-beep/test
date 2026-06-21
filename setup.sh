@@ -22,7 +22,7 @@ sudo ufw allow 9100/tcp  # Open Big Machine Port (DICOM)
 sudo ufw allow 9200/tcp  # Open IoT / CSV Port
 echo "y" | sudo ufw enable
 
-# 3. ROBUST DIRECT DOCKER INSTALLATION (Bypasses script downloads)
+# 3. ROBUST DIRECT DOCKER INSTALLATION (Bypasses broken script downloads)
 echo "-> Deploying container structures via standard repository..."
 sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
 curl -fsSL https://docker.com | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
