@@ -64,9 +64,12 @@ sudo docker exec -it marley_backend bench new-site testinghospital.local \
   --admin-password admin_hospital_password \
   --install-app erpnext --force
 
-# Fetch Marley Health cleanly by supplying only the official repository URL
-echo "-> Compiling Earthians Marley Health frameworks into v16 Bench..."
-sudo docker exec -it marley_backend bench get-app https://github.com
+# FAILSALFE ALTERNATIVE: Natively clone using terminal git directly into the application node volume
+echo "-> Pulling Earthians Marley Health via absolute volume injection paths..."
+sudo docker exec -it marley_backend git clone https://github.com /home/frappe/frappe-bench/apps/healthcare
+
+# Link the app inside the framework metadata registries and compile
+sudo docker exec -it marley_backend bench setup requirements
 sudo docker exec -it marley_backend bench --site testinghospital.local install-app healthcare
 
 # 8. Injecting SEO Landing Hub and Booking Systems into Frappe Site router
