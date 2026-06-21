@@ -64,12 +64,13 @@ sudo docker exec -it marley_backend bench new-site testinghospital.local \
   --admin-password admin_hospital_password \
   --install-app erpnext --force
 
-# DEFINITIVE SOLUTION: Runs the standard native package installation steps directly inside the container
+# Pull Marley Health via standard name matching
 echo "-> Pulling Marley Health application package natively into v16 bench..."
 sudo docker exec -it marley_backend bench get-app healthcare
 
-echo "-> Linking healthcare modules directly to the Testing Hospital instance..."
-sudo docker exec -it marley_backend bench --site testinghospital.local install-app healthcare
+# DEFINITIVE FIXED STEP: Mounts the schema structures but skips the broken frontend compilation script loop
+echo "-> Linking healthcare modules to testinghospital.local (Bypassing heavy asset engine compilation)..."
+sudo docker exec -it marley_backend bench --site testinghospital.local install-app healthcare --skip-assets
 
 # 8. Injecting SEO Landing Hub and Booking Systems into Frappe Site router
 echo "-> Building Hospital Web Front-End Page..."
