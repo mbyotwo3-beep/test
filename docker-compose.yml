@@ -25,12 +25,12 @@ services:
     container_name: hospital_redis_queue
     restart: always
 
-  # --- BACKEND SERVER: FRAPPE & MARLEY HEALTH RUNNING VERSION 16 ---
+  # --- BACKEND SERVER: FRAPPE CORE RUNNING VERSION 16 ---
   backend:
     image: frappe/erpnext:v16
     container_name: marley_backend
     ports:
-      - "80:8000"    # Exposes the Frappe 16 Patient Booking Website Publicly
+      - "80:8000"    # Access your clean Marley Health Staff EMR Panel
     environment:
       - DB_HOST=db
       - DB_PORT=3306
