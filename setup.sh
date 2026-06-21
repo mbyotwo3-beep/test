@@ -40,7 +40,7 @@ until sudo docker exec testing_hospital_db mariadb-admin ping -u root -phospital
     echo "   Database engine initializing... holding loop for 4 seconds..."
     sleep 4
 done
-echo "-> Database is fully alive and ready! [Passed]"
+echo "-> Database is fully alive and ready!"
 
 # 6. INJECT SECURE ROOT CONFIG (Bypasses terminal password prompts completely)
 echo "-> Injecting superuser access configuration blocks..."
@@ -64,9 +64,9 @@ sudo docker exec -it marley_backend bench new-site testinghospital.local \
   --admin-password admin_hospital_password \
   --install-app erpnext --force
 
-# Fetch Marley Health cleanly using standard positional naming parameters
+# Fetch Marley Health cleanly by supplying only the official repository URL
 echo "-> Compiling Earthians Marley Health frameworks into v16 Bench..."
-sudo docker exec -it marley_backend bench get-app healthcare https://github.com
+sudo docker exec -it marley_backend bench get-app https://github.com
 sudo docker exec -it marley_backend bench --site testinghospital.local install-app healthcare
 
 # 8. Injecting SEO Landing Hub and Booking Systems into Frappe Site router
