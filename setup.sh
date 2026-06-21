@@ -21,12 +21,14 @@ sudo ufw allow 9000/tcp  # Open Lab Analyzer Port (HL7)
 sudo ufw allow 9100/tcp  # Open Big Machine Port (DICOM)
 sudo ufw allow 9200/tcp  # Open IoT / CSV Port
 echo "y" | sudo ufw enable
-sudo ufw status verbose
 
-# 3. Automated deployment of Docker engine 
-echo "-> Deploying container structures..."
-curl -fsSL https://docker.com -o get-docker.sh
-sudo sh get-docker.sh
+# 3. ROBUST DIRECT DOCKER INSTALLATION (Bypasses script downloads)
+echo "-> Deploying container structures via standard repository..."
+sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+curl -fsSL https://docker.com | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://docker.com $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update -y
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 sudo systemctl enable docker --now
 
 # 4. Boot database clusters and framework platforms
@@ -90,7 +92,7 @@ print('SEO Front-end layer loaded into Frappe 16 successfully.')
 "
 
 echo "=================================================================="
-echo " SYSTEM READY: All Ports Opened and Servers Running Smoothly!   "
+echo " SYSTEM READY: All Ports Opened and New Script Installed!       "
 echo "=================================================================="
 echo " Hospital Website Home (SEO Landing & Booking): http://YOUR_LINODE_IP"
 echo " Marley Health 16 Staff Dashboard Access:       http://YOUR_LINODE_IP/app"
