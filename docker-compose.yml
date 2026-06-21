@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  # --- CENTRAL DATABASE (MARIADB 11.8 FOR FRAPPE 16) ---
+  # --- MARIA DB DATABASE ENGINE (OPTIMIZED FOR FRAPPE 16) ---
   db:
-    image: mariadb:11.8
+    image: mariadb:10.11
     container_name: testing_hospital_db
     command:
       - --character-set-server=utf8mb4
@@ -25,10 +25,12 @@ services:
     container_name: hospital_redis_queue
     restart: always
 
-  # --- LATEST FRAPPE v16 CORE ---
+  # --- BACKEND SERVER: FRAPPE & MARLEY HEALTH RUNNING VERSION 16 ---
   backend:
     image: frappe/erpnext:v16
     container_name: marley_backend
+    ports:
+      - "80:8000"    # Exposes the Frappe 16 Patient Booking Website Publicly
     environment:
       - DB_HOST=db
       - DB_PORT=3306
@@ -38,15 +40,15 @@ services:
       - assets-data:/home/frappe/frappe-bench/sites
     restart: always
 
-  # --- UNIVERSAL MACHINE INTEGRATION GATEWAY (MIRTH CONNECT) ---
+  # --- UNIVERSAL DATA PIPELINE ROUTER (MIRTH CONNECT) ---
   mirth:
     image: nextgenhealthcare/connect:latest
     container_name: mirth_connect
     ports:
-      - "8443:8443"  # Mirth Secure Login Web UI
-      - "9000:9000"  # DIAGNOSTIC: Labs, Vitals, Hematology (HL7)
-      - "9100:9100"  # BIG HOSPITAL: MRI, CT Scans, X-Rays (DICOM)
-      - "9200:9200"  # ICU / OUTPATIENT: ICU Monitors, IoT Feeds, CSV, JSON
+      - "8443:8443"  # Secure Mirth Web Interface Access
+      - "9000:9000"  # ENTRY 1: Lab Diagnostics / Hematology Analyzers (HL7)
+      - "9100:9100"  # ENTRY 2: Large Equipment Systems - MRI & CT Scans (DICOM)
+      - "9200:9200"  # ENTRY 3: General Clinical Monitors & Direct IoT (CSV/JSON/Web)
     environment:
       - DATABASE=mariadb
       - DATABASE_URL=jdbc:mariadb://db:3306/mirth_db
