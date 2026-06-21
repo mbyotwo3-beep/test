@@ -64,9 +64,9 @@ sudo docker exec -it marley_backend bench new-site testinghospital.local \
   --admin-password admin_hospital_password \
   --install-app erpnext --force
 
-# Fetch Marley Health directly into the correct destination folder without using the broken --name option
+# Fetch Marley Health directly into the correct destination folder using the updated v16 installation flag
 echo "-> Compiling Earthians Marley Health frameworks into v16 Bench..."
-sudo docker exec -it marley_backend bench get-app healthcare https://github.com
+sudo docker exec -it marley_backend bench get-app healthcare --url https://github.com
 sudo docker exec -it marley_backend bench --site testinghospital.local install-app healthcare
 
 # 8. Injecting SEO Landing Hub and Booking Systems into Frappe Site router
