@@ -2,7 +2,7 @@
 set -e
 
 echo "=================================================================="
-echo " Initiating Auto-Deployment: Testing Hospital v16 Architecture    "
+echo " Deploying Clean Stack: Marley Health & Mirth Connect Gateway    "
 echo "=================================================================="
 
 # 1. Update Ubuntu server components 
@@ -57,64 +57,41 @@ sudo docker exec -i marley_backend bash -c "cat << 'EOF' > /home/frappe/frappe-b
 EOF"
 
 # 7. Set up the fresh Frappe v16 platform core without asking for user interaction
-echo "-> Configuring Frappe v16 with Healthcare schemas..."
+echo "-> Configuring Frappe v16 core schemas..."
 sudo docker exec -it marley_backend bench new-site testinghospital.local \
   --db-root-username root \
   --db-root-password hospital_secure_password_2026 \
   --admin-password admin_hospital_password \
   --install-app erpnext --force
 
-# Pull Marley Health via standard name matching
-echo "-> Pulling Marley Health application package natively into v16 bench..."
-sudo docker exec -it marley_backend bench get-app healthcare
+# 8. DIRECT EXTRACTION PATCH: Bypasses 'bench get-app' crash entirely by mounting the repository archive manually
+echo "-> Pulling raw Marley Health framework assets directly..."
+sudo rm -rf /tmp/healthcare
+git clone https://github.com /tmp/healthcare
 
-# FIXED: Installs schemas but skips front-end asset compilation to avoid the crash
-echo "-> Linking healthcare modules to site cleanly..."
-sudo docker exec -it marley_backend bench --site testinghospital.local install-app healthcare --skip-assets
+echo "-> Injecting Marley Health codebase into container space..."
+sudo docker exec -i marley_backend mkdir -p /home/frappe/frappe-bench/apps/healthcare
+sudo docker cp /tmp/healthcare/. marley_backend:/home/frappe/frappe-bench/apps/healthcare/
+sudo docker exec -i marley_backend chown -R frappe:frappe /home/frappe/frappe-bench/apps/healthcare
 
-# 8. SAFE INJECTION: Create Python file inside container to prevent terminal quotation errors
-echo "-> Building Hospital Web Front-End Page..."
-sudo docker exec -i marley_backend bash -c "cat << 'EOF' > /home/frappe/frappe-bench/make_page.py
-import frappe
-frappe.init(site='testinghospital.local')
-frappe.connect()
-if not frappe.db.exists('Web Page', 'index'):
-    doc = frappe.get_doc({
-        'doctype': 'Web Page',
-        'title': 'Testing Hospital - Advanced Clinical Booking & Diagnosis',
-        'route': 'index',
-        'published': 1,
-        'meta_title': 'Testing Hospital | Secure Web Bookings',
-        'meta_description': 'Schedule an appointment at Testing Hospital.',
-        'main_section': '''
-        <div style="font-family:sans-serif; text-align:center; padding: 90px 20px; background:linear-gradient(to right, #1a2a6c, #b21f1f, #fdbb2d); color:white;">
-            <h1>Testing Hospital</h1>
-            <p>Frappe v16 High-Performance Framework with Live Machine Interfacing.</p>
-        </div>
-        <div style="max-width:600px; margin: 60px auto; padding: 35px; border:1px solid #ddd; border-radius:10px; font-family:sans-serif; background:#fafafa;">
-            <h2>Patient Registration Intake</h2>
-            <form action="/api/method/healthcare.healthcare.doctype.patient_appointment.patient_appointment.make_appointment" method="POST">
-                <label style="display:block; margin:15px 0 5px; font-weight:bold;">Patient Full Name</label>
-                <input type="text" name="patient_name" required style="width:100%; padding:12px; border:1px solid #ccc; border-radius:4px;">
-                <label style="display:block; margin:15px 0 5px; font-weight:bold;">Appointment Target Date</label>
-                <input type="date" name="appointment_date" required style="width:100%; padding:12px; border:1px solid #ccc; border-radius:4px;">
-                <button type="submit" style="width:100%; background:#1a2a6c; color:white; border:none; padding:15px; margin-top:25px; border-radius:4px; font-weight:bold; cursor:pointer;">Finalize Appointment</button>
-            </form>
-        </div>
-        '''
-    })
-    doc.insert()
-    frappe.db.commit()
-print('SEO Front-end layer successfully injected!')
+# Force site apps map file configuration values
+sudo docker exec -i marley_backend bash -c "cat << 'EOF' > /home/frappe/frappe-bench/sites/apps.txt
+frappe
+erpnext
+healthcare
 EOF"
 
-# Execute the isolated page injection file
-sudo docker exec -it marley_backend python3 /home/frappe/frappe-bench/make_page.py
+# Trigger structural dependency link configurations
+echo "-> Processing system dependencies..."
+sudo docker exec -it marley_backend bench setup requirements
+
+# CRITICAL FIX: Installs schemas but skips front-end asset compilation to prevent the crash
+echo "-> Binding core modules to site (Bypassing broken asset engine)..."
+sudo docker exec -it marley_backend bench --site testinghospital.local install-app healthcare --skip-assets
 
 echo "=================================================================="
-echo " SYSTEM READY: All Ports Opened and Script Executed Smoothly!    "
+echo " CLEAN SYSTEM DEPLOYED SUCCESSFULY WITHOUT ASSET ERRORS           "
 echo "=================================================================="
-echo " Hospital Website Home (SEO Landing & Booking): http://YOUR_LINODE_IP"
-echo " Staff Dashboard Access (Marley Framework):     http://YOUR_LINODE_IP/app"
+echo " Staff EMR Dashboard Access (Marley Framework): http://YOUR_LINODE_IP"
 echo " Mirth Connect Automation Hub Interface:        https://YOUR_LINODE_IP:8443"
 echo "=================================================================="
