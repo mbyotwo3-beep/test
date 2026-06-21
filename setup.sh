@@ -57,16 +57,17 @@ sudo docker exec -i marley_backend bash -c "cat << 'EOF' > /home/frappe/frappe-b
 EOF"
 
 # 7. Set up the fresh Frappe v16 platform core without asking for user interaction
-echo "-> Configuring Frappe v16 with Marley Health schemas..."
+echo "-> Configuring Frappe v16 with Healthcare schemas..."
 sudo docker exec -it marley_backend bench new-site testinghospital.local \
   --db-root-username root \
   --db-root-password hospital_secure_password_2026 \
   --admin-password admin_hospital_password \
-  --install-app erpnext --no-mariadb-socket --force
+  --install-app erpnext --force
 
-# Integrate the Marley Health module systems onto version 16 structures
-sudo docker exec -it marley_backend bench get-app marley --branch v16
-sudo docker exec -it marley_backend bench --site testinghospital.local install-app marley
+# Fetch the earthians repository directly but force clone it into the folder name 'healthcare'
+echo "-> Compiling Earthians Marley Health frameworks into v16 Bench..."
+sudo docker exec -it marley_backend bench get-app https://github.com --name healthcare
+sudo docker exec -it marley_backend bench --site testinghospital.local install-app healthcare
 
 # 8. Injecting SEO Landing Hub and Booking Systems into Frappe Site router
 echo "-> Building Hospital Web Front-End Page..."
@@ -91,7 +92,7 @@ if not frappe.db.exists('Web Page', 'index'):
         </div>
         <div id=\"booking-form\" style=\"max-width:600px; margin: 60px auto; padding: 35px; border:1px solid #ddd; border-radius:10px; font-family:sans-serif; background:#fafafa;\">
             <h2 style=\"text-align:center; color:#1a2a6c; margin-bottom:25px;\">Secure Patient Intake Registry</h2>
-            <form action=\"/api/method/marley.healthcare.doctype.patient_appointment.patient_appointment.make_appointment\" method=\"POST\">
+            <form action=\"/api/method/healthcare.healthcare.doctype.patient_appointment.patient_appointment.make_appointment\" method=\"POST\">
                 <label style=\"display:block; margin:15px 0 5px; font-weight:bold;\">Patient Legal Name</label>
                 <input type=\"text\" name=\"patient_name\" required style=\"width:100%; padding:12px; border:1px solid #ccc; border-radius:4px;\">
                 <label style=\"display:block; margin:15px 0 5px; font-weight:bold;\">Appointment Target Date</label>
@@ -113,9 +114,9 @@ print('SEO Front-end layer loaded into Frappe 16 successfully.')
 "
 
 echo "=================================================================="
-echo " SYSTEM READY: All Ports Opened and Superuser Flags Set!         "
+echo " SYSTEM READY: Earthians Marley Health Is Successfully Installed! "
 echo "=================================================================="
 echo " Hospital Website Home (SEO Landing & Booking): http://YOUR_LINODE_IP"
-echo " Marley Health 16 Staff Dashboard Access:       http://YOUR_LINODE_IP/app"
+echo " Staff Dashboard Access (Marley Framework):     http://YOUR_LINODE_IP/app"
 echo " Mirth Connect Automation Hub Interface:        https://YOUR_LINODE_IP:8443"
 echo "=================================================================="
