@@ -4,10 +4,22 @@ services:
   db:
     image: mariadb:10.6
     container_name: testing_hospital_db
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
       MYSQL_ROOT_PASSWORD: hospital_secure_password_2026
     volumes:
       - db-data:/var/lib/mysql
+    restart: always
+
+  redis-cache:
+    image: redis:6.2-alpine
+    container_name: hospital_redis_cache
+    restart: always
+
+  redis-queue:
+    image: redis:6.2-alpine
+    container_name: hospital_redis_queue
+    restart: always
 
   backend:
     image: doc0clock-hms:v16
@@ -15,10 +27,15 @@ services:
     environment:
       - DB_HOST=db
       - DB_PORT=3306
+      - REDIS_CACHE=redis://redis-cache:6379
+      - REDIS_QUEUE=redis://redis-queue:6379
     volumes:
       - sites-data:/home/frappe/frappe-bench/sites
     depends_on:
       - db
+      - redis-cache
+      - redis-queue
+    restart: always
 
   frontend:
     image: doc0clock-hms:v16
@@ -29,22 +46,8 @@ services:
       - sites-data:/home/frappe/frappe-bench/sites
     depends_on:
       - backend
-
-  # Mirth and Redis services remain the same as your provided file
-  redis-cache:
-    image: redis:6.2-alpine
-    container_name: hospital_redis_cache
-  redis-queue:
-    image: redis:6.2-alpine
-    container_name: hospital_redis_queue
-  mirth:
-    image: nextgenhealthcare/connect:latest
-    container_name: mirth_connect
-    ports:
-      - "8443:8443"
-      - "9000:9000"
+    restart: always
 
 volumes:
   db-data:
   sites-data:
-  mirth-data:
