@@ -24,7 +24,7 @@ echo "y" | sudo ufw enable
 
 # 3. USE UBUNTU'S INTERNAL DOCKER VERSION
 echo "-> Installing system container engine natively..."
-sudo apt-get install -y docker.io docker-compose git
+sudo apt-get install -y docker.io docker-compose docker-buildx git
 sudo systemctl enable docker --now
 
 export PATH=$PATH:/usr/bin:/usr/local/bin
