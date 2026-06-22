@@ -27,20 +27,22 @@ echo "-> Installing system container engine natively..."
 sudo apt-get install -y docker.io docker-compose git
 sudo systemctl enable docker --now
 
-# Refresh PATH links instantly
 export PATH=$PATH:/usr/bin:/usr/local/bin
 
-# 4. COMPILE CUSTOM DOCKER IMAGE
+# 4. COMPILE CUSTOM DOCKER IMAGE WITH BUILDKIT
 echo "-> Compiling production frontend image (This will take 5-10 minutes)..."
 if [ ! -d "frappe_docker" ]; then
     git clone https://github.com/frappe/frappe_docker.git
 fi
 cd frappe_docker
+git pull origin main
+
 echo '[
   {"url": "https://github.com/frappe/erpnext", "branch": "version-15"},
   {"url": "https://github.com/frappe/healthcare", "branch": "version-15"}
 ]' > apps.json
-sudo docker build \
+
+sudo DOCKER_BUILDKIT=1 docker build \
   --build-arg=FRAPPE_PATH=https://github.com/frappe/frappe \
   --build-arg=FRAPPE_BRANCH=version-15 \
   --build-arg=APPS_JSON_BASE64=$(base64 -w 0 apps.json) \
